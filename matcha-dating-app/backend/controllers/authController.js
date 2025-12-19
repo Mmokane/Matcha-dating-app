@@ -4,7 +4,7 @@
 // ============================================
 
 const {hashPassword, comparePassword} = require('../utils/passwordUtils')
-const {generateJWT, generateRadnomToken} = require('../utils/tokenGenerator')
+const {generateJWT, generateRandomToken} = require('../utils/tokenGenerator')
 const {sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail} = require('../utils/emailService')
 const {
   createUser,
@@ -48,7 +48,7 @@ const register = async (req, res) => {
 		// hash the password 
 		const password_hash = await hashPassword(password)
 		// generate verification token 
-		const verification_token = generateRadnomToken()
+		const verification_token = generateRandomToken()
 		// create user in database
 		const newUser = await createUser({
 			email,
@@ -92,6 +92,41 @@ const register = async (req, res) => {
 		}
 	}
 
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    const user = await findUserByVerificationToken(token);
+    
+    if (!user) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid token'
+      });
+    }
+    
+    if (user.verified) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'Email already verified'
+      });
+    }
+    
+    await updateVerificationStatus(user.id);
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Email verified successfully! You can now log in.'
+    });
+  } catch (error) {
+    console.error('Email verification error:', error.message);
+    res.status(500).json({
+      status: 'error',
+      message: 'Email verification failed',
+      error: error.message
+    });
+  }
+}
 // Login user
 // POST /api/auth/login
 const login = async (req, res) => {
@@ -111,21 +146,21 @@ const login = async (req, res) => {
       });
     }
     
-    // Check if email is verified
-    if (!user.verified) {
-      return res.status(403).json({
-        status: 'error',
-        message: 'Please verify your email before logging in'
-      });
-    }
-    
-    // Compare password
+    // Compare password first (before checking verification)
     const isPasswordValid = await comparePassword(password, user.password_hash);
     
     if (!isPasswordValid) {
       return res.status(401).json({
         status: 'error',
         message: 'Invalid credentials'
+      });
+    }
+    
+    // Check if email is verified (after password validation)
+    if (!user.verified) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Please verify your email before logging in'
       });
     }
     
@@ -194,10 +229,8 @@ const forgotPassword = async (req, res) => {
       await sendPasswordResetEmail(email, user.username, resetToken);
     } catch (emailError) {
       console.error('Error sending reset email:', emailError.message);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Failed to send reset email'
-      });
+      // Don't fail the request if email fails - just log it
+      // The token is already saved in the database
     }
     
     res.status(200).json({

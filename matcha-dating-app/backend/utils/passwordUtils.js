@@ -34,5 +34,5 @@ const comparedPassword = async (plainPassword, hashedPassword) => {
 // export functions
 module.exports = {
 	hashPassword,
-	comparedPassword
+	comparePassword: comparedPassword
 }

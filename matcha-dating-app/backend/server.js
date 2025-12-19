@@ -54,7 +54,7 @@ app.use(limiter)
 // stricter rate limit for auth routes
 const authLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
-  	max: 5, // Only 5 login attempts per 15  minutes
+  	max: process.env.NODE_ENV === 'test' ? 1000 : 100, // Increased for testing - TODO: Set back to 5 after testing
   	message: 'Too many login attempts, please try again later.',
   	skipSuccessfulRequests: true
 })
@@ -104,7 +104,7 @@ app.get('/api/db-test', async (req, res) => {
 })
 
 // TODO: Import and use route files when created
-// const authRoutes = require('./routes/authRoutes');
+const authRoutes = require('./routes/authRoutes');
 // const userRoutes = require('./routes/userRoutes');
 // const matchRoutes = require('./routes/matchRoutes');
 // const chatRoutes = require('./routes/chatRoutes');
@@ -112,7 +112,7 @@ app.get('/api/db-test', async (req, res) => {
 // const searchRoutes = require('./routes/searchRoutes');
 
 // TODO: Apply routes (uncomment when route files are created)
-// app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 // app.use('/api/users', userRoutes);
 // app.use('/api/matches', matchRoutes);
 // app.use('/api/chat', chatRoutes);

@@ -105,6 +105,7 @@ app.get('/api/db-test', async (req, res) => {
 
 // TODO: Import and use route files when created
 const authRoutes = require('./routes/authRoutes');
+const { protect } = require('./middleware/authMiddleware')
 // const userRoutes = require('./routes/userRoutes');
 // const matchRoutes = require('./routes/matchRoutes');
 // const chatRoutes = require('./routes/chatRoutes');
@@ -118,6 +119,15 @@ app.use('/api/auth', authLimiter, authRoutes);
 // app.use('/api/chat', chatRoutes);
 // app.use('/api/notifications', notificationRoutes);
 // app.use('/api/search', searchRoutes);
+
+// Test route for auth middleware
+app.get('/api/test/protected', protect, (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'You are authenticated!',
+    user: req.user
+  });
+});
 
 // 8. 404 HANDLER - Route not found
 

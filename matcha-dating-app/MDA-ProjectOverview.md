@@ -285,3 +285,6 @@ FRONTEND_URL=http://localhost:5173
 MAX_FILE_SIZE=5242880
 UPLOAD_PATH=./uploads/profiles
 ALLOWED_FILE_TYPES=image/jpeg,image/png,image/jpg
+
+# Last updated
+Oct 3 19:00
